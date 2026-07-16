@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiFi Details</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+    :root {
+        --bg: #12100e;
+        --card: #1b1815;
+        --card-edge: #2a2521;
+        --paper: #201c18;
+        --text: #efe8dd;
+        --text-muted: #8c8378;
+        --accent: #d9713c;   /* router-orange */
+    }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--bg);
+        background-image:
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.02), transparent 40%),
+            radial-gradient(circle at 80% 90%, rgba(255,255,255,0.015), transparent 45%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        padding: 24px;
+    }
+
+    .card {
+        width: 340px;
+        background: var(--card);
+        border: 1px solid var(--card-edge);
+        border-radius: 6px;
+        padding: 34px 28px 28px;
+        position: relative;
+        color: var(--text);
+        box-shadow: 0 24px 48px rgba(0,0,0,0.45);
+        animation: settle 0.5s ease-out;
+    }
+
+    @keyframes settle {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        font-weight: 600;
+        font-size: 21px;
+        line-height: 1.4;
+        color: var(--text);
+        margin-bottom: 26px;
+        border-bottom: 1px dashed var(--card-edge);
+        padding-bottom: 20px;
+    }
+
+    .info {
+        background: var(--paper);
+        border: 1px solid var(--card-edge);
+        border-radius: 4px;
+        padding: 13px 16px;
+        margin-bottom: 12px;
+        text-align: left;
+    }
+
+    .label {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .value {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        margin-top: 6px;
+        color: var(--text);
+        letter-spacing: 0.01em;
+    }
+
+    .value.pass {
+        color: var(--accent);
+    }
+
+    .qr-section {
+        margin-top: 22px;
+        padding-top: 22px;
+        border-top: 1px dashed var(--card-edge);
+        text-align: center;
+    }
+
+    .qr-hint {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+        line-height: 1.5;
+    }
+
+    #qrcode {
+        display: inline-block;
+        background: #ffffff;
+        padding: 12px;
+        border-radius: 6px;
+        line-height: 0;
+    }
+
+    button {
+        margin-top: 18px;
+        width: 100%;
+        padding: 13px;
+        border: 1px solid var(--accent);
+        border-radius: 4px;
+        background: transparent;
+        color: var(--accent);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    button:hover {
+        background: var(--accent);
+        color: #171310;
+    }
+
+    button:active {
+        transform: translateY(1px);
+    }
+
+    button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    button.secondary {
+        margin-top: 14px;
+        background: transparent;
+        border-color: var(--card-edge);
+        color: var(--text-muted);
+    }
+
+    button.secondary:hover {
+        background: var(--paper);
+        color: var(--text);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .card { animation: none; }
+    }
+</style>
+</head>
+<body>
+<div class="card">
+    <h1>Welcome to my house, this is the wifi.</h1>
+
+    <div class="info">
+        <div class="label">Network name</div>
+        <div class="value" id="ssid">—</div>
+    </div>
+    <div class="info">
+        <div class="label">Password</div>
+        <div class="value pass" id="password">—</div>
+    </div>
+
+    <button onclick="copyPassword()">Copy password</button>
+
+    <div class="qr-section">
+        <div class="qr-hint">Scan to join network</div>
+        <div id="qrcode"></div>
+    </div>
+</div>
+<script>
+const params = new URLSearchParams(window.location.search);
+const ssid = params.get('name') || 'MyHomeWiFi';
+const password = params.get('pass') || 'Secure12345';
+
+document.getElementById('ssid').textContent = ssid;
+document.getElementById('password').textContent = password;
+
+function copyPassword() {
+    navigator.clipboard.writeText(password);
+    const btn = document.querySelector('button');
+    const original = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+function escapeWifi(str) {
+    return str.replace(/([\\;,":])/g, '\\$1');
+}
+
+const wifiString = `WIFI:T:WPA;S:${escapeWifi(ssid)};P:${escapeWifi(password)};;`;
+
+new QRCode(document.getElementById("qrcode"), {
+    text: wifiString,
+    width: 180,
+    height: 180,
+    colorDark: "#12100e",
+    colorLight: "#ffffff"
+});
+
+function downloadQR() {
+    const canvas = document.querySelector('#qrcode canvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = `${ssid}-wifi-qr.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+</script>
+</body>
+</html>
